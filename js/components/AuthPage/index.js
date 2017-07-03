@@ -61,6 +61,13 @@ class AuthPage extends React.Component {
 		});
 	}
 	//}}}
+	//deauth() {{{
+	deauth = () => {
+		authenticationToken = null;
+		user = '';
+		this.setState({isLoggedIn: false});
+	}
+	//}}}
 
 	//render() {{{
 	render() {
@@ -74,13 +81,13 @@ class AuthPage extends React.Component {
 						(
 							<View>
 								<Text>Signed in as {user}</Text>
-								<Button style={{marginTop: 16}} block warning onPress={() => this.auth('register')}>
+								<Button style={{marginTop: 16}} block warning onPress={() => this.deauth()}>
 									<Text>Sign out</Text>
 								</Button>
 							</View>
 						) : (
 							<Form>
-								{serverError !== '' && <Text>{serverError}</Text>}
+								{serverError !== '' && <Text style={{color: 'tomato'}}>{serverError}</Text>}
 								<Item floatingLabel last>
 									<Label>Username</Label>
 									<Input

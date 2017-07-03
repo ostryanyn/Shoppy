@@ -1,5 +1,8 @@
 import Expo from "expo";
 import React from "react";
+
+import { Root } from "native-base";
+
 import App from "./js/App";
 
 export default class Shoppy extends React.Component {
@@ -23,6 +26,10 @@ export default class Shoppy extends React.Component {
 		if (!this.state.isReady) {
 			return <Expo.AppLoading />;
 		}
-		return <App />;
+		return (
+			<Root>
+				<App />
+			</Root>
+		);
 	}
 }

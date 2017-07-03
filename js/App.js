@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 
 import { StackNavigator } from 'react-navigation';
-
 import HomePage from './components/HomePage';
 import AuthPage from './components/AuthPage';
 import ProductPage from './components/ProductPage';

@@ -5,14 +5,13 @@ import {
 } from 'react-native';
 
 import {
-	Container,
-	Content, Body,
+	Container, Content,
+	Left, Body, Right,
 	List, ListItem,
 	Thumbnail,
 	Text,
 	Button
 } from 'native-base';
-
 
 class HomePage extends Component {
 	constructor(props) {
@@ -25,7 +24,7 @@ class HomePage extends Component {
 	static navigationOptions = ({ navigation }) => ({
 		title: 'Home',
 		headerRight:
-			<Button transparent onPress={() => navigation.navigate('AuthPage')}>
+			<Button transparent danger onPress={() => navigation.navigate('AuthPage')}>
 				<Text>Sign in</Text>
 			</Button>
 	});
@@ -58,41 +57,14 @@ class HomePage extends Component {
 		this.syncProducts();
 	}
 	//}}}
-	//renderSeparator() {{{
-	renderSeparator = () => {
-		return (
-			<View
-				style={{
-					height: 1,
-					backgroundColor: "#CED0CE",
-				}}
-			/>
-		);
-	}
-	//}}}
-	//renderFooter() {{{
-	renderFooter = () => {
-		if (!this.state.isLoading) return null;
-
-		return (
-			<View
-				style={{
-					paddingVertical: 20,
-					borderTopWidth: 1,
-					borderColor: "#CED0CE"
-				}}
-			>
-				<ActivityIndicator animating size="large" />
-			</View>
-		);
-	}
-	//}}}
 
 	//render() {{{
 	render() {
 		const {navigate} = this.props.navigation;
+		const isLoading = this.state.isLoading;
+		const products = this.state.products
 
-		if(this.state.isLoading) {
+		if(isLoading) {
 			return (
 				<View
 					style={{
@@ -105,27 +77,30 @@ class HomePage extends Component {
 				</View>
 			);
 		}
-		else {
-			return (
-				<Container style={{backgroundColor: 'white'}}>
-					<Content>
-						<List
-							dataArray={this.state.products}
-							renderRow={(item) =>
-								<ListItem onPress={() => navigate('ProductPage', { product: item })}>
-									<Thumbnail square size={160} source={{ uri: 'http://smktesting.herokuapp.com/static/'+item.img }} />
-									<Body>
-										<Text>{item.title}</Text>
-										<Text note>{item.text}</Text>
-									</Body>
-								</ListItem>
-							}
-						>
-						</List>
-					</Content>
-				</Container>
-			);
-		}
+		return (
+			<Container style={{backgroundColor: 'white'}}>
+				<Content>
+					<List
+						dataArray={products}
+						renderRow={(item) =>
+							<ListItem thumbnail onPress={() => navigate('ProductPage', { product: item })}>
+								<Left>
+									<Thumbnail square size={128} source={{ uri: 'http://smktesting.herokuapp.com/static/'+item.img }} />
+								</Left>
+								<Body>
+									<Text>{item.title}</Text>
+									<Text note>{item.text}</Text>
+								</Body>
+								<Right>
+									<Text style={{color: 'steelblue'}}>View</Text>
+								</Right>
+							</ListItem>
+						}
+					>
+					</List>
+				</Content>
+			</Container>
+		);
 	}
 	//}}}
 }

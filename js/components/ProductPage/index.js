@@ -5,7 +5,8 @@ import { View, Image, ActivityIndicator } from 'react-native';
 import {
 	Container, Content,
 	Card, CardItem, Thumbnail,
-	Left, Body,
+	Form, Input, Item,
+	Left, Body, Toast,
 	Text, Button,
 	List, ListItem, Icon
 } from 'native-base';
@@ -22,10 +23,10 @@ class ProductPage extends React.Component {
 			reviews: [],
 
 			//user review
-			//userHasReview: false,
-			userRate: 0,
+			userRate: 3,
 			userText: '',
 
+			serverError: '',
 			isLoading: false,
 		};
 	}
@@ -39,12 +40,6 @@ class ProductPage extends React.Component {
 	componentDidMount() {
 		this.syncReviews();
 	}
-	/*async componentWillMount() {
-		await Expo.Font.loadAsync({
-			'Roboto': require('native-base/Fonts/Roboto.ttf'),
-			'Roboto_medium': require('native-base/Fonts/Roboto_medium.ttf'),
-		});
-	}*/
 
 	//syncReviews() {{{
 	syncReviews = () => {
@@ -54,7 +49,14 @@ class ProductPage extends React.Component {
 		.then((response) => response.json())
 		.then((responseJson) => {
 			this.setState({
-				reviews: responseJson,
+				reviews:
+					//newest first
+					responseJson.sort((a,b) => {
+						a_date = moment(a.created_at);
+						b_date = moment(b.created_at);
+						if(a_date.isBefore(b_date)) return 1;
+						else return -1;
+					}),
 				isLoading: false,
 			});
 			//}, function() { });
@@ -79,11 +81,19 @@ class ProductPage extends React.Component {
 		.then((responseJson) => {
 			if(responseJson.success == true) {
 				this.setState({
-					userHasReview: true
+					userText: '', userRate: 3
 				});
+				Toast.show({
+					text: 'Your review has beed posted!',
+					position: 'bottom',
+					buttonText: 'Okay'
+				});
+				this.syncReviews();
 			}
 			else {
-				alert('fail posting review '+this.state.userText+' '+this.state.userRate);
+				this.setState(
+					serverError: responseJson.message
+				);
 			}
 			//}, function() { });
 		})
@@ -102,7 +112,7 @@ class ProductPage extends React.Component {
 						<Thumbnail source={{ uri: 'http://smktesting.herokuapp.com/static/' + this.state.product.img }} />
 						<Body>
 							<Text>{this.state.product.title}</Text>
-							<Text note>April 15, 2016</Text>
+							<Text note>June 30, 2013</Text>
 						</Body>
 					</Left>
 				</CardItem>
@@ -114,10 +124,8 @@ class ProductPage extends React.Component {
 				</CardItem>
 				<CardItem>
 					<Left>
-						<Button transparent textStyle={{color: '#87838B'}}>
-							<Icon name="chatbubbles" />
-							<Text>8</Text>
-						</Button>
+						<Icon name="chatbubbles" />
+						<Text>{this.state.isLoading ? '...' : this.state.reviews.length}</Text>
 					</Left>
 				</CardItem>
 			</Card>
@@ -128,7 +136,7 @@ class ProductPage extends React.Component {
 	renderSubmitReviewForm = () => {
 		if(authenticationToken == null)
 			return (
-				<Text style={{padding: 10}}>
+				<View style={{padding: 24}}>
 					<Text
 						style={{color: 'steelblue'}}
 						onPress={() => this.props.navigation.navigate('AuthPage')}
@@ -136,65 +144,54 @@ class ProductPage extends React.Component {
 						Login/register{' '}
 					</Text>
 					<Text>
-						in order to leave a review
+						in order to leave a review.
 					</Text>
-				</Text>
+				</View>
 			);
 		else
 			return (
-				<View>
-					<Rating
-						showRating
-						onFinishRating={this.ratingCompleted}
-						style={{ paddingVertical: 10 }}
-					/>
-					<TextInput
-						placeholder='Write what you think about this product...'
-						value={this.state.userText}
-						onChangeText={(text) => this.setState({userText: text})}
-					/>
-					/*<Button
-						title='Submit'
-						onPress={this.submitReview}
-					/>*/
-				</View>
+				<Form style={{padding: 24, backgroundColor: 'white'}}>
+					{this.state.serverError !== '' && <Text style={{color: 'tomato'}}>{this.state.serverError}</Text>}
+					<View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
+						<Rating
+							imageSize={30}
+							fractions={0}
+							onFinishRating={this.ratingCompleted}
+							style={{ paddingVertical: 10 }} />
+						<Text style={{color: 'slategray'}}>{'\t'}{this.state.userRate}/5</Text>
+					</View>
+					<Item regular>
+						<Input
+							value={this.state.userText}
+							onChangeText={(text) => this.setState({userText: text})}
+							placeholder='Write what you think about this product...' />
+					</Item>
+					<Button onPress={this.submitReview} style={{marginTop: 12}}>
+						<Text>Submit</Text>
+					</Button>
+				</Form>
 			);
 	}
 	//}}}
 	//renderProductReviews() {{{
 	renderProductReviews = () => {
-		if(this.state.isLoading) {
-			return (
-				<View
-					style={{
-						paddingVertical: 20,
-						borderTopWidth: 1,
-						borderColor: "#CED0CE"
-					}}
-				>
-					<ActivityIndicator animating size="large" />
-				</View>
-			);
-		}
-		else {
-			return (
-				<List dataArray={this.state.reviews}
-					style={{backgroundColor: 'white'}}
-					renderRow={(item) =>
-						<ListItem>
-							<Body>
-								<Rating imageSize={20} readonly startingValue={item.rate} style={{padding: 10}} />
-								<Text>{item.text}</Text>
-								<Text style={{color: '#777'}}>
-									{`${item.created_by.username} commented ${moment(item.created_at).fromNow()}`}
-								</Text>
-							</Body>
-						</ListItem>
-					}
-				>
-				</List>
-			);
-		}
+		return (
+			<List dataArray={this.state.reviews}
+				style={{backgroundColor: 'white'}}
+				renderRow={(item) =>
+					<ListItem>
+						<Body>
+							<Rating imageSize={20} readonly startingValue={item.rate} style={{padding: 10}} />
+							<Text>{item.text}</Text>
+							<Text style={{color: '#777'}}>
+								{`${item.created_by.username} commented ${moment(item.created_at).fromNow()}`}
+							</Text>
+						</Body>
+					</ListItem>
+				}
+			>
+			</List>
+		);
 	}
 	//}}}
 
@@ -204,12 +201,30 @@ class ProductPage extends React.Component {
 
 	//render() {{{
 	render() {
+		const isLoading = this.state.isLoading;
+
 		return (
 			<Container>
 				<Content>
 				{this.renderProductInfo()}
-				{this.renderSubmitReviewForm()}
-				{this.renderProductReviews()}
+				{isLoading ?
+					(
+						<View
+							style={{
+								paddingVertical: 20,
+								borderTopWidth: 1,
+								borderColor: "#CED0CE"
+							}}
+						>
+							<ActivityIndicator animating size="large" />
+						</View>
+					) : (
+						<View>
+							{this.renderSubmitReviewForm()}
+							{this.renderProductReviews()}
+						</View>
+					)
+				}
 				</Content>
 			</Container>
 		);
