@@ -1,0 +1,432 @@
+import React, { Component } from 'react';
+
+import { View, ScrollView, KeyboardAvoidingView, StyleSheet, TextInput, Image, FlatList, ActivityIndicator } from 'react-native';
+import { FormLabel, Rating } from 'react-native-elements';
+import { Container, Content, List, ListItem, Thumbnail, Text, Body, Button, Card, CardItem, Left, Icon, Form, Input, Label, Item } from 'native-base'
+import { StackNavigator } from 'react-navigation';
+
+import moment from 'moment'
+
+authenticationToken = null;
+
+//HomePage {{{
+class HomePage extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			products: [],
+			isLoading: false
+		};
+	}
+	static navigationOptions = ({ navigation }) => ({
+		title: 'Products',
+		headerRight: <Button transparent onPress={() => navigation.navigate('AuthPage')}><Text>Sign in</Text></Button>,
+	});
+
+	componentDidMount() {
+		this.syncProducts();
+	}
+
+	//syncProducts() {{{
+	syncProducts = () => {
+		this.setState({ isLoading: true });
+
+		fetch('http://smktesting.herokuapp.com/api/products/')
+		.then((response) => response.json())
+		.then((responseJson) => {
+			this.setState({
+				products: responseJson,
+				isLoading: false,
+			});
+			//}, function() { });
+		})
+		.catch((error) => {
+			console.error(error);
+		});
+	};
+	//}}}
+
+	//handleRefresh() {{{
+	handleRefresh = () => {
+		this.syncProducts();
+	}
+	//}}}
+	//renderSeparator() {{{
+	renderSeparator = () => {
+		return (
+			<View
+				style={{
+					height: 1,
+					backgroundColor: "#CED0CE",
+				}}
+			/>
+		);
+	}
+	//}}}
+	//renderFooter() {{{
+	renderFooter = () => {
+		if (!this.state.isLoading) return null;
+
+		return (
+			<View
+				style={{
+					paddingVertical: 20,
+					borderTopWidth: 1,
+					borderColor: "#CED0CE"
+				}}
+			>
+				<ActivityIndicator animating size="large" />
+			</View>
+		);
+	}
+	//}}}
+
+	//render() {{{
+	render() {
+		const {navigate} = this.props.navigation;
+
+		if(this.state.isLoading) {
+			return (
+				<View
+					style={{
+						paddingVertical: 20,
+						borderTopWidth: 1,
+						borderColor: "#CED0CE"
+					}}
+				>
+					<ActivityIndicator animating size="large" />
+				</View>
+			);
+		}
+		else {
+			return (
+				<Container style={{backgroundColor: 'white'}}>
+					<Content>
+						<List
+							dataArray={this.state.products}
+							renderRow={(item) =>
+								<ListItem onPress={() => navigate('ProductPage', { product: item })}>
+									<Thumbnail square size={160} source={{ uri: 'http://smktesting.herokuapp.com/static/'+item.img }} />
+									<Body>
+										<Text>{item.title}</Text>
+										<Text note>{item.text}</Text>
+									</Body>
+								</ListItem>
+							}
+						>
+						</List>
+					</Content>
+				</Container>
+			);
+		}
+	}
+	//}}}
+}
+//}}}
+
+//ProductPage {{{
+class ProductPage extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			product: {},
+			reviews: [],
+
+			//user review
+			//userHasReview: false,
+			userRate: 0,
+			userText: '',
+
+			isLoading: false,
+		};
+	}
+	static navigationOptions = ({ navigation }) => ({
+		title: navigation.state.params.product.title,
+	});
+
+	componentWillMount() {
+		this.setState({product: this.props.navigation.state.params.product});
+	}
+	componentDidMount() {
+		this.syncReviews();
+	}
+	/*async componentWillMount() {
+		await Expo.Font.loadAsync({
+			'Roboto': require('native-base/Fonts/Roboto.ttf'),
+			'Roboto_medium': require('native-base/Fonts/Roboto_medium.ttf'),
+		});
+	}*/
+
+	//syncReviews() {{{
+	syncReviews = () => {
+		this.setState({ isLoading: true });
+
+		fetch('http://smktesting.herokuapp.com/api/reviews/' + this.state.product.id)
+		.then((response) => response.json())
+		.then((responseJson) => {
+			this.setState({
+				reviews: responseJson,
+				isLoading: false,
+			});
+			//}, function() { });
+		})
+		.catch((error) => {
+			console.error(error);
+		});
+	};
+	//}}}
+	//submitReview() {{{
+	submitReview = () => {
+		fetch(
+			'http://smktesting.herokuapp.com/api/reviews/' + this.state.product.id,
+			{
+				method: 'POST',
+				headers: {'Authorization': 'Token ' + authenticationToken,
+				          'Content-Type': 'application/json' },
+				body: JSON.stringify({ rate: this.state.userRate, text: this.state.userText })
+			}
+		)
+		.then((response) => response.json())
+		.then((responseJson) => {
+			if(responseJson.success == true) {
+				this.setState({
+					userHasReview: true
+				});
+			}
+			else {
+				alert('fail posting review '+this.state.userText+' '+this.state.userRate);
+			}
+			//}, function() { });
+		})
+		.catch((error) => {
+			console.error(error);
+		});
+	}
+	//}}}
+
+	//renderProductInfo() {{{
+	renderProductInfo = () => {
+		return (
+			<Card style={{flex: 0}}>
+				<CardItem>
+					<Left>
+						<Thumbnail source={{ uri: 'http://smktesting.herokuapp.com/static/' + this.state.product.img }} />
+						<Body>
+							<Text>{this.state.product.title}</Text>
+							<Text note>April 15, 2016</Text>
+						</Body>
+					</Left>
+				</CardItem>
+				<CardItem>
+					<Body>
+						<Image source={{ uri: 'http://smktesting.herokuapp.com/static/' + this.state.product.img }} style={{height: 200, width: 200, flex: 1}}/>
+						<Text>{this.state.product.text}</Text>
+					</Body>
+				</CardItem>
+				<CardItem>
+					<Left>
+						<Button transparent textStyle={{color: '#87838B'}}>
+							<Icon name="chatbubbles" />
+							<Text>8</Text>
+						</Button>
+					</Left>
+				</CardItem>
+			</Card>
+		);
+	}
+	//}}}
+	//renderSubmitReviewForm() {{{
+	renderSubmitReviewForm = () => {
+		if(authenticationToken == null)
+			return (
+				<Text style={{padding: 10}}>
+					<Text
+						style={{color: 'steelblue'}}
+						onPress={() => this.props.navigation.navigate('AuthPage')}
+					>
+						Login/register{' '}
+					</Text>
+					<Text>
+						in order to leave a review
+					</Text>
+				</Text>
+			);
+		else
+			return (
+				<View>
+					<Rating
+						showRating
+						onFinishRating={this.ratingCompleted}
+						style={{ paddingVertical: 10 }}
+					/>
+					<TextInput
+						placeholder='Write what you think about this product...'
+						value={this.state.userText}
+						onChangeText={(text) => this.setState({userText: text})}
+					/>
+					/*<Button
+						title='Submit'
+						onPress={this.submitReview}
+					/>*/
+				</View>
+			);
+	}
+	//}}}
+	//renderProductReviews() {{{
+	renderProductReviews = () => {
+		if(this.state.isLoading) {
+			return (
+				<View
+					style={{
+						paddingVertical: 20,
+						borderTopWidth: 1,
+						borderColor: "#CED0CE"
+					}}
+				>
+					<ActivityIndicator animating size="large" />
+				</View>
+			);
+		}
+		else {
+			return (
+				<List dataArray={this.state.reviews}
+					style={{backgroundColor: 'white'}}
+					renderRow={(item) =>
+						<ListItem>
+							<Body>
+								<Rating imageSize={20} readonly startingValue={item.rate} style={{padding: 10}} />
+								<Text>{item.text}</Text>
+								<Text style={{color: '#777'}}>
+									{`${item.created_by.username} commented ${moment(item.created_at).fromNow()}`}
+								</Text>
+							</Body>
+						</ListItem>
+					}
+				>
+				</List>
+			);
+		}
+	}
+	//}}}
+
+	ratingCompleted = rating => {
+		this.setState({userRate: rating});
+	}
+
+	//render() {{{
+	render() {
+		return (
+			<Container>
+				<Content>
+				{this.renderProductInfo()}
+				{this.renderSubmitReviewForm()}
+				{this.renderProductReviews()}
+				</Content>
+			</Container>
+		);
+	}
+	//}}}
+}
+//}}}
+
+//AuthPage {{{
+class AuthPage extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			isLoggingIn: false,
+			username: '',
+			userpassword: ''
+		};
+	}
+	static navigationOptions = ({ navigation }) => ({
+		title: 'Authorization',
+	});
+
+	//auth() {{{
+	auth = mode => {
+		this.setState({isLoggingIn: true});
+		fetch(
+			'http://smktesting.herokuapp.com/api/'+mode+'/',
+			{
+				method: 'POST',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify({ username: this.state.username, password: this.state.userpassword })
+			}
+		)
+		.then((response) => response.json())
+		.then((responseJson) => {
+			if(responseJson.success == true) {
+				authenticationToken = responseJson.token;
+				this.props.navigation.goBack();
+			}
+			else {
+				alert(JSON.stringify(responseJson));
+			}
+			//}, function() { });
+		})
+		.catch((error) => {
+			console.error(error);
+		});
+	}
+	//}}}
+
+	//render() {{{
+	render() {
+		return (
+			<Container>
+				<Content>
+					<KeyboardAvoidingView
+						behavior='position'
+						contentContainerStyle={styles.contentContainer}
+					>
+						<Form>
+							<Item floatingLabel>
+								<Label>Username</Label>
+								<Input
+									value={this.state.username}
+									onChangeText={(text) => this.setState({username: text})} />
+							</Item>
+							<Item floatingLabel last>
+								<Label>Password</Label>
+								<Input
+									value={this.state.userpassword}
+									onChangeText={(text) => this.setState({userpassword: text})} />
+							</Item>
+							<Button onPress={() => this.auth('login')}>
+								<Text>Sign in</Text>
+							</Button>
+							<Button onPress={() => this.auth('register')}>
+								<Text>Register</Text>
+							</Button>
+						</Form>
+					</KeyboardAvoidingView>
+				</Content>
+			</Container>
+		);
+	}
+	//}}}
+
+}
+//}}}
+
+const ModalStack = StackNavigator({
+	Home: {
+		screen: HomePage,
+	},
+	ProductPage: {
+		path: 'people/:name',
+		screen: ProductPage,
+	},
+	AuthPage: {
+		screen: AuthPage,
+	},
+});
+
+const styles = StyleSheet.create({
+	contentContainer: {
+		padding: 32,
+	}
+});
+
+export default ModalStack;
