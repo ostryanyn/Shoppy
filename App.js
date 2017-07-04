@@ -1,11 +1,14 @@
-import Expo from "expo";
-import React from "react";
+import Expo from 'expo';
+import React, { Component } from 'react';
 
-import { Root } from "native-base";
+import { Root } from 'native-base';
 
-import App from "./js/App";
+import { Provider } from 'react-redux';
 
-export default class Shoppy extends React.Component {
+import App from './js/App';
+import store from './js/redux';
+
+export default class Shoppy extends Component {
 	constructor() {
 		super();
 		this.state = {
@@ -15,9 +18,9 @@ export default class Shoppy extends React.Component {
 
 	async componentWillMount() {
 		await Expo.Font.loadAsync({
-			Roboto: require("native-base/Fonts/Roboto.ttf"),
-			Roboto_medium: require("native-base/Fonts/Roboto_medium.ttf"),
-			Ionicons: require("@expo/vector-icons/fonts/Ionicons.ttf")
+			Roboto: require('native-base/Fonts/Roboto.ttf'),
+			Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
+			Ionicons: require('@expo/vector-icons/fonts/Ionicons.ttf')
 		});
 
 		this.setState({ isReady: true });
@@ -27,9 +30,11 @@ export default class Shoppy extends React.Component {
 			return <Expo.AppLoading />;
 		}
 		return (
-			<Root>
-				<App />
-			</Root>
+			<Provider store={store}>
+				<Root>
+					<App />
+				</Root>
+			</Provider>
 		);
 	}
 }

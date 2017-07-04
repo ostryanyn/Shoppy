@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 
+import { connect } from 'react-redux';
+
 import {
 	View, ActivityIndicator
 } from 'react-native';
@@ -25,7 +27,7 @@ class HomePage extends Component {
 		title: 'Home',
 		headerRight:
 			<Button transparent danger onPress={() => navigation.navigate('AuthPage')}>
-				<Text>Sign in</Text>
+				<Text>Profile</Text>
 			</Button>
 	});
 
@@ -103,6 +105,13 @@ class HomePage extends Component {
 		);
 	}
 	//}}}
+}
+
+const mapStateToProps = (state, ownProps) => {
+	return {
+		isLoggedIn: state.auth.isLoggedIn,
+		username: state.auth.username
+	};
 }
 
 export default HomePage;

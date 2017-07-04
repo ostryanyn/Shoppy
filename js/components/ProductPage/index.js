@@ -13,6 +13,8 @@ import {
 
 import { Rating, TextInput } from 'react-native-elements';
 
+import { connect } from 'react-redux';
+
 import moment from 'moment';
 
 class ProductPage extends React.Component {
@@ -72,7 +74,7 @@ class ProductPage extends React.Component {
 			'http://smktesting.herokuapp.com/api/reviews/' + this.state.product.id,
 			{
 				method: 'POST',
-				headers: {'Authorization': 'Token ' + authenticationToken,
+				headers: {'Authorization': 'Token ' + this.props.token,
 				          'Content-Type': 'application/json' },
 				body: JSON.stringify({ rate: this.state.userRate, text: this.state.userText })
 			}
@@ -91,9 +93,9 @@ class ProductPage extends React.Component {
 				this.syncReviews();
 			}
 			else {
-				this.setState(
+				this.setState({
 					serverError: responseJson.message
-				);
+				});
 			}
 			//}, function() { });
 		})
@@ -134,21 +136,9 @@ class ProductPage extends React.Component {
 	//}}}
 	//renderSubmitReviewForm() {{{
 	renderSubmitReviewForm = () => {
-		if(authenticationToken == null)
-			return (
-				<View style={{padding: 24}}>
-					<Text
-						style={{color: 'steelblue'}}
-						onPress={() => this.props.navigation.navigate('AuthPage')}
-					>
-						Login/register{' '}
-					</Text>
-					<Text>
-						in order to leave a review.
-					</Text>
-				</View>
-			);
-		else
+		const isLoggedIn = this.props.isLoggedIn;
+
+		if(isLoggedIn)
 			return (
 				<Form style={{padding: 24, backgroundColor: 'white'}}>
 					{this.state.serverError !== '' && <Text style={{color: 'tomato'}}>{this.state.serverError}</Text>}
@@ -170,6 +160,20 @@ class ProductPage extends React.Component {
 						<Text>Submit</Text>
 					</Button>
 				</Form>
+			);
+		else
+			return (
+				<View style={{padding: 24}}>
+					<Text
+						style={{color: 'steelblue'}}
+						onPress={() => this.props.navigation.navigate('AuthPage')}
+					>
+						Login/register{' '}
+					</Text>
+					<Text>
+						in order to leave a review.
+					</Text>
+				</View>
 			);
 	}
 	//}}}
@@ -232,4 +236,12 @@ class ProductPage extends React.Component {
 	//}}}
 }
 
-export default ProductPage;
+const mapStateToProps = (state, ownProps) => {
+	return {
+		isLoggedIn: state.auth.isLoggedIn,
+		username: state.auth.username,
+		token: state.auth.token
+	};
+}
+
+export default connect(mapStateToProps)(ProductPage);

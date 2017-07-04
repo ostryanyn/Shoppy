@@ -10,13 +10,16 @@ import {
 	Button
 } from 'native-base';
 
+import { connect } from 'react-redux';
+
+import { login, logout } from '../../redux/actions/auth';
+
 class AuthPage extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
 			username: '',
-			userpassword: '',
-			isLoggedIn: false,
+			password: '',
 			serverError: ''
 		};
 	}
@@ -24,16 +27,8 @@ class AuthPage extends React.Component {
 		title: 'Authorization',
 	});
 
-	componentWillMount() {
-		if(authenticationToken !== null)
-			this.setState({isLoggedIn: true});
-		else
-			this.setState({isLoggedIn: false});
-	}
-
 	//auth() {{{
 	auth = mode => {
-		this.setState({isLoggingIn: true});
 		fetch(
 			'http://smktesting.herokuapp.com/api/'+mode+'/',
 			{
@@ -45,11 +40,7 @@ class AuthPage extends React.Component {
 		.then((response) => response.json())
 		.then((responseJson) => {
 			if(responseJson.success == true) {
-				authenticationToken = responseJson.token;
-				user = this.state.username;
-				this.setState({
-					isLoggedIn: true
-				});
+				this.props.onLogin(this.state.username, responseJson.token);
 			}
 			else {
 				this.setState({serverError: responseJson.message});
@@ -63,16 +54,14 @@ class AuthPage extends React.Component {
 	//}}}
 	//deauth() {{{
 	deauth = () => {
-		authenticationToken = null;
-		user = '';
-		this.setState({isLoggedIn: false});
+		this.props.onLogout();
 	}
 	//}}}
 
 	//render() {{{
 	render() {
-		const isLoggedIn = this.state.isLoggedIn;
 		const serverError = this.state.serverError;
+		const { isLoggedIn, username } = this.props;
 
 		return (
 			<Container>
@@ -80,7 +69,7 @@ class AuthPage extends React.Component {
 					{isLoggedIn ?
 						(
 							<View>
-								<Text>Signed in as {user}</Text>
+								<Text>Signed in as {username}</Text>
 								<Button style={{marginTop: 16}} block warning onPress={() => this.deauth()}>
 									<Text>Sign out</Text>
 								</Button>
@@ -116,4 +105,18 @@ class AuthPage extends React.Component {
 	//}}}
 }
 
-export default AuthPage
+const mapStateToProps = (state, ownProps) => {
+	return {
+		isLoggedIn: state.auth.isLoggedIn,
+		username: state.auth.username
+	};
+}
+
+const mapDispatchToProps = (dispatch) => {
+	return {
+		onLogin: (username, token) => { dispatch(login(username, token)); },
+		onLogout: () => { dispatch(logout()); }
+	}
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(AuthPage);
