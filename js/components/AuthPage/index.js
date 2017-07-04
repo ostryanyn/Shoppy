@@ -29,12 +29,14 @@ class AuthPage extends React.Component {
 
 	//auth() {{{
 	auth = mode => {
+		this.setState({serverError: ''});
+
 		fetch(
 			'http://smktesting.herokuapp.com/api/'+mode+'/',
 			{
 				method: 'POST',
 				headers: {'Content-Type': 'application/json'},
-				body: JSON.stringify({ username: this.state.username, password: this.state.userpassword })
+				body: JSON.stringify({ username: this.state.username, password: this.state.password })
 			}
 		)
 		.then((response) => response.json())

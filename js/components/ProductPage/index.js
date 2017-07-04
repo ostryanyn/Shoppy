@@ -7,7 +7,7 @@ import {
 	Card, CardItem, Thumbnail,
 	Form, Input, Item,
 	Left, Body, Toast,
-	Text, Button,
+	Text, Button, H1, H2,
 	List, ListItem, Icon
 } from 'native-base';
 
@@ -180,6 +180,8 @@ class ProductPage extends React.Component {
 	//renderProductReviews() {{{
 	renderProductReviews = () => {
 		return (
+			<View>
+			<H2 style={{padding: 12, backgroundColor: 'ghostwhite'}}>Reviews</H2>
 			<List dataArray={this.state.reviews}
 				style={{backgroundColor: 'white'}}
 				renderRow={(item) =>
@@ -195,6 +197,7 @@ class ProductPage extends React.Component {
 				}
 			>
 			</List>
+			</View>
 		);
 	}
 	//}}}
