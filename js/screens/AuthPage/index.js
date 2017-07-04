@@ -13,6 +13,7 @@ import {
 import { connect } from 'react-redux';
 
 import { login, logout } from '../../redux/actions/auth';
+import { request } from '../../utils/api';
 
 class AuthPage extends React.Component {
 	constructor(props) {
@@ -31,15 +32,11 @@ class AuthPage extends React.Component {
 	auth = mode => {
 		this.setState({serverError: ''});
 
-		fetch(
-			'http://smktesting.herokuapp.com/api/'+mode+'/',
-			{
-				method: 'POST',
-				headers: {'Content-Type': 'application/json'},
-				body: JSON.stringify({ username: this.state.username, password: this.state.password })
-			}
-		)
-		.then((response) => response.json())
+		let body = {
+			username: this.state.username,
+			password: this.state.password
+		}
+		request(`/${mode}/`, 'POST', body)
 		.then((responseJson) => {
 			if(responseJson.success == true) {
 				this.props.onLogin(this.state.username, responseJson.token);

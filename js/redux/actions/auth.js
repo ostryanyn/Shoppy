@@ -12,7 +12,3 @@ export const logout = () => {
 	};
 };
 
-export const signup = (username, password) => {
-	return (dispatch) => {
-	};
-};

@@ -15,6 +15,8 @@ import { Rating, TextInput } from 'react-native-elements';
 
 import { connect } from 'react-redux';
 
+import { request } from '../../utils/api';
+
 import moment from 'moment';
 
 class ProductPage extends React.Component {
@@ -47,12 +49,11 @@ class ProductPage extends React.Component {
 	syncReviews = () => {
 		this.setState({ isLoading: true });
 
-		fetch('http://smktesting.herokuapp.com/api/reviews/' + this.state.product.id)
-		.then((response) => response.json())
+		request(`/reviews/${this.state.product.id}`, 'GET')
 		.then((responseJson) => {
 			this.setState({
 				reviews:
-					//newest first
+					//sort: newest first
 					responseJson.sort((a,b) => {
 						a_date = moment(a.created_at);
 						b_date = moment(b.created_at);

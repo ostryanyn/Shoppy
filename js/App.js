@@ -1,12 +1,9 @@
 import React, { Component } from 'react';
 
 import { StackNavigator } from 'react-navigation';
-import HomePage from './components/HomePage';
-import AuthPage from './components/AuthPage';
-import ProductPage from './components/ProductPage';
-
-authenticationToken = null;
-user = '';
+import HomePage from './screens/HomePage';
+import AuthPage from './screens/AuthPage';
+import ProductPage from './screens/ProductPage';
 
 const ModalStack = StackNavigator(
 	{

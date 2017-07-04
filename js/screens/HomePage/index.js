@@ -15,6 +15,8 @@ import {
 	Button
 } from 'native-base';
 
+import { request } from '../../utils/api.js';
+
 class HomePage extends Component {
 	constructor(props) {
 		super(props);
@@ -39,8 +41,7 @@ class HomePage extends Component {
 	syncProducts = () => {
 		this.setState({ isLoading: true });
 
-		fetch('http://smktesting.herokuapp.com/api/products/')
-		.then((response) => response.json())
+		request('/products', 'GET')
 		.then((responseJson) => {
 			this.setState({
 				products: responseJson,
